@@ -27,9 +27,14 @@ frontend/coverage/
 .idea/*
 !.idea/runConfigurations/
 !.idea/runConfigurations/**
+*.iml
 
 # VS Code
 .vscode/
+
+# Other IDE / tool artifacts
+.PVS-Studio/
+.ai/
 
 # =========================
 # OS
