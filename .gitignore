@@ -1,0 +1,51 @@
+# =========================
+# Go Backend
+# =========================
+backend/bin/
+backend/tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# =========================
+# Node / Frontend
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo
+
+# =========================
+# IDE
+# =========================
+# IntelliJ (keep runConfigurations)
+.idea/*
+!.idea/runConfigurations/
+!.idea/runConfigurations/**
+
+# VS Code
+.vscode/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Environment
+# =========================
+.env
+.env.local
+.env.*.local
