@@ -1,0 +1,87 @@
+/* ===========================
+   Design Tokens
+   =========================== */
+:root {
+  /* Colors */
+  --bg-primary: #08080f;
+  --bg-secondary: #12121e;
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --bg-glass-hover: rgba(255, 255, 255, 0.08);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-glass-hover: rgba(255, 255, 255, 0.15);
+
+  --text-primary: #eaeaea;
+  --text-secondary: #777;
+  --text-muted: #555;
+
+  --accent: #6c63ff;
+  --accent-hover: #7c73ff;
+  --accent-glow: rgba(108, 99, 255, 0.25);
+
+  --danger: #ff6b6b;
+  --danger-glow: rgba(255, 107, 107, 0.2);
+
+  --success: #51cf66;
+
+  --btn-number-bg: rgba(255, 255, 255, 0.06);
+  --btn-number-hover: rgba(255, 255, 255, 0.12);
+  --btn-operator-bg: rgba(108, 99, 255, 0.2);
+  --btn-operator-hover: rgba(108, 99, 255, 0.35);
+  --btn-action-bg: rgba(255, 255, 255, 0.08);
+  --btn-action-hover: rgba(255, 255, 255, 0.15);
+  --btn-equals-bg: linear-gradient(135deg, #6c63ff 0%, #8b5cf6 100%);
+  --btn-equals-hover: linear-gradient(135deg, #7c73ff 0%, #9b6cf6 100%);
+
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --font-size-display: 2.75rem;
+  --font-size-expression: 0.9rem;
+  --font-size-button: 1.3rem;
+  --font-size-small: 0.85rem;
+
+  /* Spacing */
+  --gap: 10px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  /* Shadows */
+  --shadow-calculator: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(108, 99, 255, 0.08);
+  --shadow-btn: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+}
+
+/* ===========================
+   Reset & Base
+   =========================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
