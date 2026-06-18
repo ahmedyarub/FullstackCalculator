@@ -1,0 +1,157 @@
+name: Deploy to AWS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      backend_tag:
+        description: 'Backend image tag (defaults to latest commit SHA)'
+        required: false
+        type: string
+      frontend_tag:
+        description: 'Frontend image tag (defaults to latest commit SHA)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 123456789012.dkr.ecr.us-east-1.amazonaws.com
+  BACKEND_REPO: fullstack-calculator/backend
+  FRONTEND_REPO: fullstack-calculator/frontend
+  ECS_CLUSTER: fullstack-calculator
+  BACKEND_SERVICE: calculator-backend
+  FRONTEND_SERVICE: calculator-frontend
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tags
+        id: tags
+        run: |
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          BACKEND_TAG="${{ inputs.backend_tag || format('{0}', env.SHORT_SHA) }}"
+          FRONTEND_TAG="${{ inputs.frontend_tag || format('{0}', env.SHORT_SHA) }}"
+          echo "backend_tag=${BACKEND_TAG:-$SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "frontend_tag=${FRONTEND_TAG:-$SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Build and push backend image
+        working-directory: backend
+        run: |
+          TAG=${{ steps.tags.outputs.backend_tag }}
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.BACKEND_REPO }}:$TAG .
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.BACKEND_REPO }}:$TAG \
+                     ${{ env.ECR_REGISTRY }}/${{ env.BACKEND_REPO }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.BACKEND_REPO }}:$TAG
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.BACKEND_REPO }}:latest
+
+      - name: Build and push frontend image
+        working-directory: frontend
+        run: |
+          TAG=${{ steps.tags.outputs.frontend_tag }}
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:$TAG .
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:$TAG \
+                     ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:$TAG
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:latest
+
+      - name: Deploy backend to ECS
+        run: |
+          TAG=${{ steps.tags.outputs.backend_tag }}
+          # Update task definition with new image
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition ${{ env.BACKEND_SERVICE }}-${{ inputs.environment }} \
+            --query 'taskDefinition' --output json)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq \
+            --arg IMAGE "${{ env.ECR_REGISTRY }}/${{ env.BACKEND_REPO }}:$TAG" \
+            '.containerDefinitions[0].image = $IMAGE |
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                 .compatibilities, .registeredAt, .registeredBy)')
+
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }}-${{ inputs.environment }} \
+            --service ${{ env.BACKEND_SERVICE }} \
+            --task-definition "$NEW_TASK_DEF_ARN" \
+            --force-new-deployment
+
+      - name: Deploy frontend to ECS
+        run: |
+          TAG=${{ steps.tags.outputs.frontend_tag }}
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition ${{ env.FRONTEND_SERVICE }}-${{ inputs.environment }} \
+            --query 'taskDefinition' --output json)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq \
+            --arg IMAGE "${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:$TAG" \
+            '.containerDefinitions[0].image = $IMAGE |
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                 .compatibilities, .registeredAt, .registeredBy)')
+
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }}-${{ inputs.environment }} \
+            --service ${{ env.FRONTEND_SERVICE }} \
+            --task-definition "$NEW_TASK_DEF_ARN" \
+            --force-new-deployment
+
+      - name: Wait for deployment stability
+        run: |
+          echo "Waiting for backend service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }}-${{ inputs.environment }} \
+            --services ${{ env.BACKEND_SERVICE }}
+
+          echo "Waiting for frontend service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }}-${{ inputs.environment }} \
+            --services ${{ env.FRONTEND_SERVICE }}
+
+          echo "✅ Deployment complete!"
+
+      - name: Deployment summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | \`${{ inputs.environment }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ steps.tags.outputs.short_sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tag | \`${{ steps.tags.outputs.backend_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Tag | \`${{ steps.tags.outputs.frontend_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cluster | \`${{ env.ECS_CLUSTER }}-${{ inputs.environment }}\` |" >> $GITHUB_STEP_SUMMARY
