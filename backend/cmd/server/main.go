@@ -21,8 +21,8 @@ func main() {
 	mux.HandleFunc("/api/health", handler.Health)
 	mux.HandleFunc("/api/calculate", handler.Calculate)
 
-	// Wrap the mux with CORS middleware.
-	srv := middleware.CORS(mux)
+	// Wrap the mux with middleware: Logger → CORS → Handler.
+	srv := middleware.Logger(middleware.CORS(mux))
 
 	addr := fmt.Sprintf(":%s", port)
 	log.Printf("Calculator API server starting on %s", addr)

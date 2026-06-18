@@ -1,5 +1,5 @@
 import { Button } from './Button';
-import { ButtonConfig } from '../types';
+import type { ButtonConfig } from '../types';
 
 const BUTTONS: ButtonConfig[] = [
   // Row 1: Actions
