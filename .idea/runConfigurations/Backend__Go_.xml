@@ -2,7 +2,7 @@
   <configuration default="false" name="Backend (Go)" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="FullstackCalculator" />
     <working_directory value="$PROJECT_DIR$/backend" />
-    <kind value="PACKAGE" />
+    <kind value="DIRECTORY" />
     <package value="github.com/fullstack-calculator/backend/cmd/server" />
     <directory value="$PROJECT_DIR$/backend/cmd/server" />
     <filePath value="$PROJECT_DIR$/backend/cmd/server/main.go" />
