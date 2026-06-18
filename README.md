@@ -275,7 +275,7 @@ FullstackCalculator/
 │   ├── internal/
 │   │   ├── calculator/              #   Pure math functions + tests
 │   │   ├── handler/                 #   HTTP handlers + tests
-│   │   └── middleware/              #   CORS middleware
+│   │   └── middleware/              #   CORS + request/response logging
 │   ├── Dockerfile
 │   └── go.mod
 ├── frontend/                         # React + TypeScript + Vite
@@ -297,14 +297,15 @@ FullstackCalculator/
 │   ├── Architecture.md              #   Mermaid diagrams
 │   ├── api-spec.md                  #   API specification
 │   ├── backend-spec.md              #   Backend spec
-│   └── frontend-spec.md            #   Frontend spec
+│   └── frontend-spec.md             #   Frontend spec
 ├── .github/
-│   ├── workflows/ci.yml            #   CI pipeline
-│   ├── workflows/deploy.yml        #   Manual deploy to AWS
-│   └── copilot-instructions.md     #   AI coding instructions
+│   ├── workflows/ci.yml             #   CI pipeline
+│   ├── workflows/deploy.yml         #   Manual deploy to AWS
+│   └── copilot-instructions.md      #   AI coding instructions
 ├── .idea/runConfigurations/          # IDE run configs
 ├── AGENTS.md                         # AI agent instructions
 ├── docker-compose.yml
+├── go.work                           # Go workspace (module in backend/)
 └── README.md
 ```
 
