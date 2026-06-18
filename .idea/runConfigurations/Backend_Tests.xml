@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend Tests" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="FullstackCalculator" />
+    <working_directory value="$PROJECT_DIR$/backend" />
+    <kind value="DIRECTORY" />
+    <package value="github.com/fullstack-calculator/backend" />
+    <directory value="$PROJECT_DIR$/backend" />
+    <filePath value="$PROJECT_DIR$/backend" />
+    <framework value="gotest" />
+    <pattern value="./..." />
+    <method v="2" />
+  </configuration>
+</component>
